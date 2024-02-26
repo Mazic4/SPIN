@@ -14,6 +14,24 @@ def setup_arg_parser():
     parser.add_argument('--data', type=str, default='HuggingFaceH4/ultrachat_200k')
     return parser.parse_args()
 
+def load_and_process_data_tuluv2(dataset_name, split=None):
+    #todo: check split is always train or not.
+    try:
+        dataset = load_dataset(dataset_name, split="train")
+        dataset_dict = dataset.train_test_split(test_size=0.2)
+        train_dataset, test_dataset = dataset_dict["train"], dataset_dict["test"]
+        train_reformatted_data = [{
+            'generated': [message['messages'][0], {"role": "assistant", "content": ""}], 
+            'real': [message['messages'][0], message['messages'][1]]
+        } for message in train_dataset]
+        test_reformatted_data = [{
+            'generated': [message['messages'][0], {"role": "assistant", "content": ""}], 
+            'real': [message['messages'][0], message['messages'][1]]
+        } for message in test_dataset]
+        return train_reformatted_data, test_reformatted_data
+    except Exception as e:
+        logging.error(f"Error loading or processing dataset: {e}")
+        return [], []
 
 def load_and_process_data_ultrachat(dataset_name, split):
     try:
@@ -45,9 +63,7 @@ def main():
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    if args.data == 'HuggingFaceH4/ultrachat_200k':
-        train_data = load_and_process_data_ultrachat(args.data, 'train_sft')
-        test_data = load_and_process_data_ultrachat(args.data, 'test_sft')
+    train_data, test_data = load_and_process_data_tuluv2(args.data)
 
     train_json_path = output_dir / 'train.json'
     test_json_path = output_dir / 'test.json'
