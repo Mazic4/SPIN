@@ -27,7 +27,7 @@ eval_steps: 500
 gradient_accumulation_steps: 1
 gradient_checkpointing: true
 hub_model_id: tulu-7b-spin
-learning_rate: 2.0e-7
+learning_rate: 1.0e-7
 log_level: info
 logging_steps: 10
 lr_scheduler_type: linear
