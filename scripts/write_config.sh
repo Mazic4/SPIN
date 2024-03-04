@@ -26,7 +26,7 @@ evaluation_strategy: "steps"
 eval_steps: 500
 gradient_accumulation_steps: 1
 gradient_checkpointing: true
-hub_model_id: tulu-7b-spin
+hub_model_id: test-7b
 learning_rate: 5.0e-7
 log_level: info
 logging_steps: 10
