@@ -33,7 +33,7 @@ def split_to_spin_message(text):
 
     return spin_message
 
-def load_and_process_data_mrgt(datset_name, split=None, test_size=968):
+def load_and_process_data_mrgt(datset_name, split=None, test_size=0.99):
 
     from transformers import AutoTokenizer, AutoModel
 
