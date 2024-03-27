@@ -7,9 +7,10 @@ export CUDA_VISIBLE_DEVICES="0,1,2,3,4,5,6,7"
 # Set the logging level for the `accelerate` library to output informational messages.
 ACCELERATE_LOG_LEVEL=info
 
-MAIN_BASE_DIR=$(pwd)/mrgt/generated/v5/
-MODEL_BASE_DIR=/maas-vepfs/spin-outputs/ecom/mrgt/v5/
-CONFIG_BASE_DIR="configs/mrgt/v5/"
+version="v2_0"
+MAIN_BASE_DIR=$(pwd)/mrgt/train_generated/${version}/
+MODEL_BASE_DIR=/maas-vepfs/spin-outputs/ecom/mrgt/${version}/
+CONFIG_BASE_DIR="configs/mrgt/${version}/"
 
 mkdir -p ${MODEL_BASE_DIR}
 mkdir -p ${MAIN_BASE_DIR}
@@ -20,7 +21,8 @@ for iter in 0 1 2 3; do
 
     # #run generation via batch llm
     if [ "$iter" -eq 0 ]; then
-        model_dir="/maas-vepfs/models/ecom/mrgt/v3"
+        # model_dir="/maas-vepfs/models/ecom/mrgt/v3"
+        model_dir="/maas-vepfs/models/ecom/mrgt/mrgt_mixchat/"
     else
         model_dir="${MODEL_BASE_DIR}/iter$((iter-1))"
     fi
@@ -45,7 +47,7 @@ for iter in 0 1 2 3; do
     output_dir=${MODEL_BASE_DIR}/iter$iter
     config_path=${CONFIG_BASE_DIR}config_iter$iter.yaml
 
-    bash scripts/write_config_v4.sh $model_dir $data_output_dir": 1.0" $config_path
+    bash scripts/write_config_v5.sh $model_dir $data_output_dir": 1.0" $config_path
 
     accelerate launch --config_file configs/deepspeed_zero3.yaml --num_processes=8 --main_process_port 2950 \
     spin/run_spin.py $config_path --num_train_epochs=3 --output_dir=$output_dir

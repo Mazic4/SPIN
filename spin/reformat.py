@@ -14,14 +14,17 @@ def setup_arg_parser():
     parser.add_argument('--data', type=str, default='HuggingFaceH4/ultrachat_200k')
     return parser.parse_args()
 
-def split_to_spin_message(text):
+def split_to_spin_message_mrgt(text):
 
     prompt = text['question']
     answer = text['answer']
 
     system_user_prompt = prompt.split('<|user|>\n')
-    if len(system_user_prompt) > 2:
-        raise ValueError("More than 1 system-user prompt pair found")
+    # if len(system_user_prompt) > 2:
+    #     print (len(system_user_prompt))
+    #     for i in range(len(system_user_prompt)):
+    #         print (i, system_user_prompt[i])
+    #     raise ValueError("More than 1 system-user prompt pair found")
 
     system_prompt = system_user_prompt[0]
     user_prompt = system_user_prompt[1]
@@ -32,6 +35,39 @@ def split_to_spin_message(text):
     }
 
     return spin_message
+
+
+def split_to_spin_message_pdp(text):
+
+    system_prompt =  {"role": "system", "content": text['instruction']}
+    user_prompt = {"role": "user", "content": text['rounds'][0]['prompt']}
+    answer = {"role": "assistant", "content": text['rounds'][0]['response']}
+
+    spin_message = {
+        'generated': [system_prompt, user_prompt,{"role": "assistant", "content": ""}], 
+        'real': [system_prompt, user_prompt, answer]
+    }
+
+    return spin_message
+
+
+def load_and_process_data_pdp(datset_name, split=None, test_size=0.05):
+    
+    dataset = load_dataset(datset_name, split='train')
+    dataset_dict = dataset.train_test_split(test_size=test_size)
+    train_dataset, test_dataset = dataset_dict["train"], dataset_dict["test"]
+    
+    try:
+        train_reformatted_data = [split_to_spin_message_pdp(message) for message in train_dataset]
+        test_reformatted_data = [split_to_spin_message_pdp(message) for message in test_dataset]
+
+        return train_reformatted_data, test_reformatted_data
+    except Exception as e:
+        logging.error(f"Error loading or processing dataset: {e}")
+        return [], []
+
+    return train_reformatted_data, test_reformatted_data
+
 
 def load_and_process_data_mrgt(datset_name, split=None, test_size=0.05):
 
@@ -49,8 +85,8 @@ def load_and_process_data_mrgt(datset_name, split=None, test_size=0.05):
     train_dataset, test_dataset = dataset_dict["train"], dataset_dict["test"]
     
     try:
-        train_reformatted_data = [split_to_spin_message(message) for message in train_dataset]
-        test_reformatted_data = [split_to_spin_message(message) for message in test_dataset]
+        train_reformatted_data = [split_to_spin_message_mrgt(message) for message in train_dataset]
+        test_reformatted_data = [split_to_spin_message_mrgt(message) for message in test_dataset]
 
         return train_reformatted_data, test_reformatted_data
     except Exception as e:
@@ -121,8 +157,12 @@ def main():
         test_data = load_and_process_data_ultrachat(args.data, split='test_sft')
     elif "mrgt" in args.data:
         train_data, test_data = load_and_process_data_mrgt(args.data)
+    elif "pdp" in args.data:
+        train_data, test_data = load_and_process_data_pdp(args.data)
     else:
         raise ValueError("Unknown dataset")
+
+    # print (train_data, test_data)
 
     train_json_path = output_dir / 'train.json'
     test_json_path = output_dir / 'test.json'

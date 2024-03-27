@@ -71,7 +71,7 @@ def generate_on_single_gpu(
         tensor_parallel_size=world_size,
     )
 
-    sampling_params = SamplingParams(temperature=1.0, top_p=1.0, max_tokens=256)
+    sampling_params = SamplingParams(temperature=1.0, top_p=1.0, max_tokens=512)
 
     # load data
     data = load_dataset(input_dir, split=split)
@@ -104,6 +104,7 @@ def generate_on_single_gpu(
     for idx in range(len(corrects_all)):
         if corrects_all[idx] == results[idx]:
             continue
+        
         d = {
             "real": [
                 {"role": "user", "content": prompts_old[idx]},

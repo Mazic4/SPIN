@@ -13,9 +13,9 @@ def write_json(data_list, data_path):
             json.dump(entry, f)
             f.write('\n')  # Add newline after each JSON object
 
-def convert_single_file(data_path, output_data_path):
+def convert_single_file(data_path, output_data_path, split='test'):
 
-    dataset = load_dataset(data_path, split='test')
+    dataset = load_dataset(data_path, split=split)
     print (len(dataset))
 
 
@@ -52,10 +52,14 @@ def list_jsonl_files(directory):
     return jsonl_files
 
 # Example usage
-version="v5"
-root_dir = '/root/code/opensource/SPIN/mrgt/test_generated/'
-generate_dir = '/root/code/opensource/SPIN/mrgt/test_generated/'
-jsonl_files = list_jsonl_files(root_dir+"lang/{}/".format(version))
+version="v2_4"
+is_hard=True
+if not is_hard:
+    root_dir = '/root/code/opensource/SPIN/mrgt/test_generated/'
+    jsonl_files = list_jsonl_files(root_dir+"lang/{}/".format(version))
+else:
+    root_dir='/root/code/opensource/SPIN/mrgt/inference/'
+    jsonl_files= list_jsonl_files(root_dir+"{}/hard/".format(version))
 print(jsonl_files)
 
 for data_path in jsonl_files:
@@ -64,4 +68,7 @@ for data_path in jsonl_files:
     dir_path = '/'.join(_[:-1])
     print (dir_path, iter, checkpoint, lang)
     os.makedirs(root_dir+"maas_format/lang/{}/{}/{}/".format(version, iter, checkpoint), exist_ok=True)
-    convert_single_file(dir_path, root_dir+"maas_format/lang/{}/{}/{}/testset.{}.pred.jsonl".format(version, iter, checkpoint, lang))
+    if is_hard:
+        convert_single_file(dir_path, root_dir+"maas_format/lang/{}/{}/{}/testset.hard.{}.pred.jsonl".format(version, iter, checkpoint, lang), split='train')
+    else:
+        convert_single_file(dir_path, root_dir+"maas_format/lang/{}/{}/{}/testset.{}.pred.jsonl".format(version, iter, checkpoint, lang))

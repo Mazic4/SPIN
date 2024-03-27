@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="v5"
+version="v2_10"
 
 BASE_DIR="/maas-vepfs/spin-outputs/ecom/mrgt/${version}/"
 data_dir_base="./test_scripts/data_"
@@ -17,6 +17,10 @@ for lang in en; do
 
     IFS=$'\n' read -r -d '' -a checkpoint_dirs <<< "$(find "$BASE_DIR" -type d -name "checkpoint-*" | grep 'checkpoint-.*$')"
 
+    sft_model_dir="/maas-vepfs/models/ecom/mrgt/mrgt_mixchat/"
+    sft_generate_output_dir="./mrgt/test_generated/lang/sft/mix/${lang}"
+    python3 spin/batched_generate_vllm_mrgt_inference.py --model "$sft_model_dir" --input_dir "$out_dir" --frac_len 968 --num_data_frac 1 --tp_per_worker 1 --split test --output_dir "$sft_generate_output_dir"
+    
     # Loop through the array of directories
     for model_dir in "${checkpoint_dirs[@]}"; do
         # Extract checkpoint number or identifier from directory name
